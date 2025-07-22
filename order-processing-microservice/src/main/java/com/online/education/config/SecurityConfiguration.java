@@ -61,7 +61,7 @@ public class SecurityConfiguration  {
         config.setMaxAge(3600L);  // Cache the preflight response for 1 hour
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration("/order-processing-microservice**", config);
         return new CorsFilter(source);
     }
 }

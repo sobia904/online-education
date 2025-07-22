@@ -98,6 +98,7 @@ public class OrderProcessingServiceImpl implements OrderProcessingService {
                 OrderItem.builder()
                         .order(order)
                         .quantity(itemDTO.getQuantity())
+                        .itemId(itemDTO.getItemId())
                         .price(itemDTO.getPrice())
                         .build()
         ).toList();

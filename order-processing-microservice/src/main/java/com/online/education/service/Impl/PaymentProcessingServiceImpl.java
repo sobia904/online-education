@@ -68,7 +68,7 @@ public class PaymentProcessingServiceImpl implements PaymentProcessingService {
         paymentRepository.save(payment);
 
         // Update order status to PAID
-        order.setStatus(OrderStatus.PAYMENT_SUCCESSFUL);
+        order.setStatus(OrderStatus.ORDER_PLACED);
         orderRepository.save(order);
         return GenericResponse.createSuccessResponse(environment.getProperty(CREATE_PAYMENT_REQUEST_SUCCESS));
     }

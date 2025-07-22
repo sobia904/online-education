@@ -25,16 +25,14 @@ public class Order extends BaseEntity {
     private String orderNumber;
 
     @ManyToOne
-    @JoinColumn(name = "customer_id", nullable = false)
+    @JoinColumn(name = "customer_id")
     private TradeFlowUser customer;
 
-    @ManyToOne
-    @JoinColumn(name = "supplier_id", nullable = false)
-    private TradeFlowUser supplierId;
+    @Column(name = "supplier_id", nullable = false)
+    private Long supplierId;
 
-    @ManyToOne
-    @JoinColumn(name = "vendor_id", nullable = false)
-    private TradeFlowUser vendorId;
+    @Column(name = "vendor_id", nullable = false)
+    private Long vendorId;
 
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

@@ -1,5 +1,6 @@
 package com.online.education.request;
 
+import com.online.education.entity.TradeFlowUser;
 import lombok.Data;
 
 import java.util.List;

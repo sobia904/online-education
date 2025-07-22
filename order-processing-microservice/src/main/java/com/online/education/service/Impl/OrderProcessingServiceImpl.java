@@ -98,7 +98,6 @@ public class OrderProcessingServiceImpl implements OrderProcessingService {
                 OrderItem.builder()
                         .order(order)
                         .quantity(itemDTO.getQuantity())
-                        .id(itemDTO.getItemId())
                         .price(itemDTO.getPrice())
                         .build()
         ).toList();
@@ -115,6 +114,9 @@ public class OrderProcessingServiceImpl implements OrderProcessingService {
         order.setStatus( OrderStatus.ORDER_PLACED );
         order.setTotalPrice( orderRequestDTO.getTotalPrice() );
         order.setOrderNumber( generateOrderNumber() );
+        order.setSupplierId( orderRequestDTO.getSupplierId() );
+        order.setVendorId( orderRequestDTO.getVendorId() );
+
         return order;
     }
 

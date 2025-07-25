@@ -2,9 +2,11 @@ package com.online.education.manager;
 
 import com.online.education.entity.TradeFlowUser;
 import com.online.education.exception.UserServiceException;
+import com.online.education.filter.TradeFlowAuthentication;
 import com.online.education.request.*;
 import com.online.education.response.ChangePasswordResponseDTO;
 import com.online.education.response.GenericResponse;
+import com.online.education.response.OrderSummaryResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
@@ -17,6 +19,8 @@ public interface UserManager {
     GenericResponse userList(UserSearchRequest userSearchRequest);
 
     GenericResponse findByUserId(UserIdRequest userIdRequest);
+
+    OrderSummaryResponseDTO fetchOrderSummary(TradeFlowAuthentication authentication);
 
     GenericResponse updateUserDetails(TradeFlowUser user);
 

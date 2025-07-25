@@ -8,6 +8,7 @@ import com.online.education.manager.UserManager;
 import com.online.education.request.*;
 import com.online.education.response.GenericResponse;
 import com.online.education.response.MenuDTO;
+import com.online.education.response.OrderSummaryResponseDTO;
 import com.online.education.service.PermissionGroupService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -70,6 +71,18 @@ public class UserResource {
     public GenericResponse updateDetails(@RequestBody TradeFlowUser request) {
         return userManager.updateUserDetails(request);
     }
+
+    @PostMapping("/last-five-orders")
+    public GenericResponse getLastFiveOrders() {
+        TradeFlowAuthentication auth = (TradeFlowAuthentication) SecurityContextHolder.getContext().getAuthentication();
+        OrderSummaryResponseDTO response = userManager.fetchOrderSummary(auth);
+        return GenericResponse.createSuccessResponse(
+                "Fetched last five orders & top selling items successfully",
+                "orderSummary",
+                response
+        );
+    }
+
 
     @PostMapping("/users/business-roles")
     public GenericResponse businessRoleList( @RequestBody BusinessRoleSearchRequest roleSearchRequest ){

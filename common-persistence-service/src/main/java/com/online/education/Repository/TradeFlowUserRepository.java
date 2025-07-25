@@ -1,10 +1,12 @@
 package com.online.education.Repository;
 
 import com.online.education.entity.TradeFlowUser;
+import jakarta.persistence.criteria.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository

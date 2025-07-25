@@ -3,17 +3,14 @@ package com.online.education.manager.impl;
 import com.online.education.Repository.RoleRepository;
 import com.online.education.Repository.TradeFlowUserRepository;
 import com.online.education.Repository.UserTypeRepository;
-import com.online.education.entity.PermissionGroup;
-import com.online.education.entity.Role;
-import com.online.education.entity.TradeFlowUser;
-import com.online.education.entity.UserType;
+import com.online.education.constant.OrderStatus;
+import com.online.education.entity.*;
 import com.online.education.exception.UserServiceException;
 import com.online.education.filter.TradeFlowAuthentication;
 import com.online.education.manager.UserManager;
+import com.online.education.repository.OrderRepository;
 import com.online.education.request.*;
-import com.online.education.response.ChangePasswordResponseDTO;
-import com.online.education.response.GenericResponse;
-import com.online.education.response.PaginatedResponseDTO;
+import com.online.education.response.*;
 import com.online.education.service.PermissionGroupService;
 import com.online.education.util.SpecificationUtility;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -43,6 +41,9 @@ public class UserManagerImpl implements UserManager {
 
     @Autowired
     private UserTypeRepository userTypeRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -63,6 +64,7 @@ public class UserManagerImpl implements UserManager {
     private static final String ADD_BUSINESS_ROLE_SUCCESS= "user.role.fetch.success";
     private static final String CREATED_ON_ATTR = "createdOn";
     private static final String ADD_BUSINESS_ROLE_SUCCESS_MESSAGE = "user.role.create.success";
+
 
     @Autowired
     private Environment environment;
@@ -116,6 +118,92 @@ public class UserManagerImpl implements UserManager {
             return GenericResponse.createSuccessResponse(environment.getProperty(USER_SUCCESSFULLY_FETCH));
         }
     }
+
+
+    @Override
+    public OrderSummaryResponseDTO fetchOrderSummary(TradeFlowAuthentication auth) {
+        OrderSummaryResponseDTO summary = new OrderSummaryResponseDTO();
+
+        Long userId = auth.getUserId();
+        Long roleId = auth.getUserRoleId();
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new RuntimeException("Role not found!"));
+        Long userTypeId = role.getUserType().getId();
+        UserType userType = userTypeRepository.findById(userTypeId)
+                .orElseThrow(() -> new RuntimeException("UserType not found for ID: " + userTypeId));
+        String userTypeName = userType.getName();
+        List<Order> orders;
+
+        if ("Admin".equalsIgnoreCase(userTypeName)) {
+            orders = orderRepository.findTop5ByOrderByCreatedOnDesc();
+        } else if ("Supplier".equalsIgnoreCase(userTypeName)) {
+            orders = orderRepository.findTop5BySupplierIdOrderByCreatedOnDesc(userId);
+        } else if ("Vendor".equalsIgnoreCase(userTypeName)) {
+            orders = orderRepository.findTop5ByVendorIdOrderByCreatedOnDesc(userId);
+        } else {
+            orders = new ArrayList<>();
+        }
+
+
+        List<RecentOrderDTO> recentOrders = orders.stream()
+                .map(order -> new RecentOrderDTO(
+                        order.getId(),
+                        order.getOrderNumber(),
+                        order.getStatus().name(),
+                        order.getCreatedOn()
+                ))
+                .collect(Collectors.toList());
+        summary.setRecentOrders(recentOrders);
+
+
+        List<OrderItem> allItems = new ArrayList<>();
+        for (Order order : orders) {
+            allItems.addAll(order.getItems());
+        }
+        Map<Long, Long> itemQuantityMap = new HashMap<>();
+        Map<Long, Double> itemPriceMap = new HashMap<>();
+
+        for (OrderItem item : allItems) {
+            itemQuantityMap.merge(item.getItemId(), (long) item.getQuantity(), Long::sum);
+            itemPriceMap.merge(item.getItemId(), item.getPrice() * item.getQuantity(), Double::sum);
+        }
+
+        List<TopSellingDTO> topSellingItems = itemQuantityMap.entrySet().stream()
+                .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
+                .limit(5)
+                .map(e -> new TopSellingDTO(
+                        e.getKey(),
+                        e.getValue(),
+                        itemPriceMap.getOrDefault(e.getKey(), 0.0)
+                ))
+                .collect(Collectors.toList());
+        summary.setTopSellingItems(topSellingItems);
+
+        // ✅ Order Counts
+        Long pending;
+        Long completed;
+
+        if ("Admin".equalsIgnoreCase(userTypeName)) {
+            pending = orderRepository.countByStatus(OrderStatus.PENDING);
+            completed = orderRepository.countByStatus(OrderStatus.ORDER_PLACED);
+        } else if ("Supplier".equalsIgnoreCase(userTypeName)) {
+            pending = orderRepository.countByStatusAndSupplierId(OrderStatus.PENDING, userId);
+            completed = orderRepository.countByStatusAndSupplierId(OrderStatus.ORDER_PLACED, userId);
+        } else if ("Vendor".equalsIgnoreCase(userTypeName)) {
+            pending = orderRepository.countByStatusAndVendorId(OrderStatus.PENDING, userId);
+            completed = orderRepository.countByStatusAndVendorId(OrderStatus.ORDER_PLACED, userId);
+        } else {
+            pending = 0L;
+            completed = 0L;
+        }
+
+        summary.setTotalPendingOrders(BigDecimal.valueOf(pending));
+        summary.setTotalCompletedOrders(BigDecimal.valueOf(completed));
+
+        return summary;
+    }
+
+
 
     @Override
     public GenericResponse updateUserDetails( TradeFlowUser user){

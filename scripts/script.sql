@@ -140,7 +140,6 @@ insert into learning_ds.role_permission_group (role_id, permission_group_id) val
 insert into learning_ds.role_permission_group (role_id, permission_group_id) values(1, 111);
 
 
-
 -- order Permission queries
 INSERT INTO learning_ds.PERMISSION_GROUP (ID, NAME, DESCRIPTION, IS_ACTIVE, CREATED_BY, CREATED_ON, MODIFIED_BY, MODIFIED_ON, PARENT_ID)
 VALUES(112, 'Order Management - Order List and View', 'Order Management - Order List and View', 1, 'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, 3);
@@ -219,4 +218,39 @@ INSERT INTO learning_ds.MENU_PERMISSION_GROUP (MENU_ID, PERMISSION_GROUP_ID) VAL
 INSERT INTO learning_ds.MENU_PERMISSION_GROUP (MENU_ID, PERMISSION_GROUP_ID) VALUES (106, 110);
 
 INSERT INTO learning_ds.MENU_PERMISSION_GROUP (MENU_ID, PERMISSION_GROUP_ID) VALUES (106, 111);
+
+
+-- Setting For Suppiler Role
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 101);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 102);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 103);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 104);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 105);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 106);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 107);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 108);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 109);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 110);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 111);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 112);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 113);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 114);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(2, 115);
+
+-- Setting For Vendor Role
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 101);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 102);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 103);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 104);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 105);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 106);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 107);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 108);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 109);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 110);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 111);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 112);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 113);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 114);
+insert into learning_ds.role_permission_group (role_id, permission_group_id) values(3, 115);
 

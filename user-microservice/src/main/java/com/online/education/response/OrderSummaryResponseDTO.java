@@ -15,7 +15,10 @@ import java.util.List;
 public class OrderSummaryResponseDTO {
     private List<RecentOrderDTO> recentOrders;
     private List<TopSellingDTO> topSellingItems;
+    private List<MonthlySalesDTO> monthlySalesDTOS;
+    private List<WeeklySalesDTO>  weeklySalesDTOS;
     private BigDecimal totalPendingOrders;
     private BigDecimal totalCompletedOrders;
+    private BigDecimal totalSalesOrders;
 
 }

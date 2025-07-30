@@ -8,10 +8,12 @@ import com.online.education.entity.*;
 import com.online.education.exception.UserServiceException;
 import com.online.education.filter.TradeFlowAuthentication;
 import com.online.education.manager.UserManager;
+import com.online.education.repository.ItemRepository;
 import com.online.education.repository.OrderRepository;
 import com.online.education.request.*;
 import com.online.education.response.*;
 import com.online.education.service.PermissionGroupService;
+import com.online.education.util.SalesUtils;
 import com.online.education.util.SpecificationUtility;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -29,6 +31,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,6 +51,9 @@ public class UserManagerImpl implements UserManager {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ItemRepository itemRepository;
 
     @Autowired
     private PermissionGroupService permissionGroupService;
@@ -166,6 +173,7 @@ public class UserManagerImpl implements UserManager {
         for (OrderItem item : allItems) {
             itemQuantityMap.merge(item.getItemId(), (long) item.getQuantity(), Long::sum);
             itemPriceMap.merge(item.getItemId(), item.getPrice() * item.getQuantity(), Double::sum);
+
         }
 
         List<TopSellingDTO> topSellingItems = itemQuantityMap.entrySet().stream()
@@ -183,6 +191,7 @@ public class UserManagerImpl implements UserManager {
         Long pending;
         Long completed;
 
+
         if ("Admin".equalsIgnoreCase(userTypeName)) {
             pending = orderRepository.countByStatus(OrderStatus.PENDING);
             completed = orderRepository.countByStatus(OrderStatus.ORDER_PLACED);
@@ -199,6 +208,93 @@ public class UserManagerImpl implements UserManager {
 
         summary.setTotalPendingOrders(BigDecimal.valueOf(pending));
         summary.setTotalCompletedOrders(BigDecimal.valueOf(completed));
+
+
+        BigDecimal totalSales = BigDecimal.ZERO;
+        List<Order> placedOrders;
+
+        if ("Admin".equalsIgnoreCase(userTypeName)) {
+            placedOrders = orderRepository.findByStatus(OrderStatus.ORDER_PLACED);
+        } else if ("Supplier".equalsIgnoreCase(userTypeName)) {
+            placedOrders = orderRepository.findByStatusAndSupplierId(OrderStatus.ORDER_PLACED, userId);
+        } else if ("Vendor".equalsIgnoreCase(userTypeName)) {
+            placedOrders = orderRepository.findByStatusAndVendorId(OrderStatus.ORDER_PLACED, userId);
+        } else {
+            placedOrders = new ArrayList<>();
+        }
+
+        for (Order order : placedOrders) {
+            totalSales = totalSales.add(
+                    order.getTotalPrice() != null ? BigDecimal.valueOf(order.getTotalPrice()) : BigDecimal.ZERO
+            );
+        }
+
+        summary.setTotalSalesOrders(totalSales);
+
+        // Weekly Sales
+        List<WeeklySalesDTO> weeklySales = new ArrayList<>();
+        List<LocalDate> weeklyPeriods = SalesUtils.getLastSixWeeks();
+
+        for (int i = 0; i < weeklyPeriods.size(); i++) {
+            LocalDate start = weeklyPeriods.get(i);
+            LocalDate end = (i + 1 < weeklyPeriods.size()) ? weeklyPeriods.get(i + 1).minusDays(1) : LocalDate.now();
+
+            Date startDate = java.sql.Date.valueOf(start);
+            Date endDate = java.sql.Date.valueOf(end);
+
+            List<Order> weeklyOrders;
+            if ("Admin".equalsIgnoreCase(userTypeName)) {
+                weeklyOrders = orderRepository.findByStatusAndCreatedOnBetween(OrderStatus.ORDER_PLACED, startDate, endDate);
+            } else if ("Supplier".equalsIgnoreCase(userTypeName)) {
+                weeklyOrders = orderRepository.findByStatusAndSupplierIdAndCreatedOnBetween(OrderStatus.ORDER_PLACED, userId, startDate, endDate);
+            } else if ("Vendor".equalsIgnoreCase(userTypeName)) {
+                weeklyOrders = orderRepository.findByStatusAndVendorIdAndCreatedOnBetween(OrderStatus.ORDER_PLACED, userId, startDate, endDate);
+            } else {
+                weeklyOrders = new ArrayList<>();
+            }
+
+            BigDecimal total = weeklyOrders.stream()
+                    .map(o -> o.getTotalPrice() != null ? BigDecimal.valueOf(o.getTotalPrice()) : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            String label = "Week " + (i + 1);
+            weeklySales.add(new WeeklySalesDTO(label, total));
+        }
+
+        summary.setWeeklySalesDTOS(weeklySales);
+
+        // Monthly Sales
+        List<MonthlySalesDTO> monthlySales = new ArrayList<>();
+        List<YearMonth> monthlyPeriods = SalesUtils.getLastSixMonths();
+
+        for (YearMonth month : monthlyPeriods) {
+            LocalDate start = month.atDay(1);
+            LocalDate end = month.atEndOfMonth();
+
+            Date startDate = java.sql.Date.valueOf(start);
+            Date endDate = java.sql.Date.valueOf(end);
+
+            List<Order> monthlyOrders;
+            if ("Admin".equalsIgnoreCase(userTypeName)) {
+                monthlyOrders = orderRepository.findByStatusAndCreatedOnBetween(OrderStatus.ORDER_PLACED, startDate, endDate);
+            } else if ("Supplier".equalsIgnoreCase(userTypeName)) {
+                monthlyOrders = orderRepository.findByStatusAndSupplierIdAndCreatedOnBetween(OrderStatus.ORDER_PLACED, userId, startDate, endDate);
+            } else if ("Vendor".equalsIgnoreCase(userTypeName)) {
+                monthlyOrders = orderRepository.findByStatusAndVendorIdAndCreatedOnBetween(OrderStatus.ORDER_PLACED, userId, startDate, endDate);
+            } else {
+                monthlyOrders = new ArrayList<>();
+            }
+
+            BigDecimal total = monthlyOrders.stream()
+                    .map(o -> o.getTotalPrice() != null ? BigDecimal.valueOf(o.getTotalPrice()) : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            String label = month.getMonth().toString().substring(0, 3) + " " + month.getYear();
+            monthlySales.add(new MonthlySalesDTO(label, total));
+        }
+
+        summary.setMonthlySalesDTOS(monthlySales);
+
 
         return summary;
     }
